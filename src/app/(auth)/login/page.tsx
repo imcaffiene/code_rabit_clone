@@ -1,6 +1,8 @@
-import Auth from "@/features/components/auth/Auth";
+import Auth from "@/features/auth/components/Auth";
+import { requireUnAuth } from "@/lib/auth-utils";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  await requireUnAuth();
   return (
     <Auth />
   );

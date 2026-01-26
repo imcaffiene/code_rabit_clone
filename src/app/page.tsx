@@ -1,18 +1,17 @@
-import { Button } from "@/components/animate-ui/components/buttons/button";
-import { GithubIcon } from "@/components/ui/github";
-import { CodeParticles } from "@/features/components/effects/CodeParticles";
+import { Button } from "@/components/ui/button";
+import { CodeParticles } from "@/features/auth/effects/CodeParticles";
 import { ThemeSwitcher } from "@/provider/ThemeSwitcher";
 import { ArrowRight, Code2, Shield, Sparkles, Zap } from "lucide-react";
 import Link from "next/link";
 
 
-const Index = () => {
+export default function Home() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Animated Background */}
       <div className="absolute inset-0">
         {/* Gradient base */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background dark:from-brand-muted/20" />
+        <div className="absolute inset-0 bg-linear-to-br from-primary/10 via-background to-background dark:from-brand-muted/20" />
 
         {/* Animated orbs */}
         <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/10 dark:bg-primary/20 rounded-full blur-[100px] animate-float" />
@@ -116,7 +115,6 @@ const Index = () => {
                 size="lg"
                 className="h-14 px-8 text-base font-medium gap-2 group shadow-lg shadow-primary/25 animate-pulse-glow"
               >
-                <GithubIcon className="w-5 h-5" />
                 Get Started Free
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
               </Button>
@@ -147,10 +145,9 @@ const Index = () => {
         </main>
 
         {/* Footer gradient */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-linear-to-t from-background to-transparent pointer-events-none" />
       </div>
     </div>
   );
 };
 
-export default Index;

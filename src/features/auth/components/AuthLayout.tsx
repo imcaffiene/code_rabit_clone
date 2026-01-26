@@ -66,7 +66,7 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
               const Icon = feature.icon;
               return (
                 <div key={index} className="flex gap-4 items-start">
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                       <Icon className="h-5 w-5 text-primary" />
                     </div>

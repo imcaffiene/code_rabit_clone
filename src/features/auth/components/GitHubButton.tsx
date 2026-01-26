@@ -1,6 +1,7 @@
-import { EllipsisIcon } from "@/components/animate-ui/icons/ellipsis";
-import { Button } from "@/components/animate-ui/primitives/buttons/button";
-import { GithubIcon } from "@/components/ui/github";
+import { GithubIcon } from "@/components/animate-ui/icons/github";
+import { Loader } from "@/components/animate-ui/icons/loader";
+import { Button } from "@/components/ui/button";
+
 
 
 interface GitHubButtonProps {
@@ -17,7 +18,7 @@ export const GitHubButton = ({ onClick, isLoading, variant = 'login' }: GitHubBu
       className="w-full h-12 px-4 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 rounded-lg flex items-center justify-center cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
     >
       {isLoading ? (
-        <EllipsisIcon animate className="mr-2 h-5 w-5 animate-spin" />
+        <Loader className="mr-2 h-5 w-5 animate-spin" />
       ) : (
         <GithubIcon className="mr-2 h-5 w-5" />
       )}

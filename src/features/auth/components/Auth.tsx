@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ThemeSwitcher } from '@/provider/ThemeSwitcher';
 import { GitHubButton } from './GitHubButton';
 import { AuthLayout } from './AuthLayout';
-import { useAuth } from '@/features/hooks/useAuth';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 type AuthMode = 'login' | 'signup';
 

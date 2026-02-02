@@ -29,7 +29,7 @@ export const DashboardOverview = () => {
         <h1 className="text-3xl font-bold text-foreground">
           Welcome Back{stats?.username ? `, ${stats.username}` : ''}
         </h1>
-        <p className="text-muted-foreground">Here's an overview of your repositories and recent activity.</p>
+        <p className="text-muted-foreground"> Here&apos;s an overview of your repositories and recent activity.</p>
       </div>
 
       {/* Stats Grid */}

@@ -21,7 +21,7 @@ export const getOctokitInstanse = cache(async () => {
       timeout: 10000, // 10 seconds - prevents hanging
     },
     retry: {
-      enable: true,
+      enabled: true,
       retries: 2, // Retry 2 times on failure
     },
   });

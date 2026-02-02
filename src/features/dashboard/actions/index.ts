@@ -153,25 +153,55 @@ export async function getMonthlyActivity(): Promise<MonthlyActivity[]> {
       "Dec",
     ];
 
-    // Create entries for last 6 months with zero values
+    //Calculate 6-month window using UTC
+    const nowUTC = new Date();
+    const sixMonthsAgoUTC = new Date(
+      Date.UTC(
+        nowUTC.getUTCFullYear(),
+        nowUTC.getUTCMonth() - 6,
+        1,
+        0,
+        0,
+        0,
+        0,
+      ),
+    );
 
-    const now = new Date();
+    // Create entries for last 6 months with UTC month extraction
+    const last6Months: string[] = [];
     for (let i = 5; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthKey = monthNames[date.getMonth()];
+      const date = new Date(
+        Date.UTC(
+          nowUTC.getUTCFullYear(),
+          nowUTC.getUTCMonth() - i,
+          1,
+          0,
+          0,
+          0,
+          0,
+        ),
+      );
+      const monthKey = monthNames[date.getUTCMonth()]; // Use getUTCMonth()
+      last6Months.push(monthKey);
       monthlyData[monthKey] = { commit: 0, prs: 0, review: 0 };
     }
 
-    //Aggregate commit data from calendar
-
+    // Aggregate commit data with UTC parsing and date filtering
     calendar.weeks.forEach((week) => {
       week.contributionDays.forEach((day) => {
-        const date = new Date(day.date);
-        const monthKey = monthNames[date.getMonth()];
+        // GitHub returns ISO date strings (YYYY-MM-DD in UTC)
+        // Parse as UTC to avoid timezone shifts
+        const [year, month, dayOfMonth] = day.date.split("-").map(Number);
+        const dateUTC = new Date(Date.UTC(year, month - 1, dayOfMonth));
 
-        // Only count if month is in our 6-month window
-        if (monthlyData[monthKey] !== undefined) {
-          monthlyData[monthKey].commit += day.contributionCount;
+        // ✅ Only count if date is within 6-month window
+        if (dateUTC >= sixMonthsAgoUTC) {
+          const monthKey = monthNames[dateUTC.getUTCMonth()]; //Use getUTCMonth()
+
+          // Only count if month is in our 6-month window
+          if (monthlyData[monthKey] !== undefined) {
+            monthlyData[monthKey].commit += day.contributionCount;
+          }
         }
       });
     });
@@ -204,7 +234,7 @@ export async function getMonthlyActivity(): Promise<MonthlyActivity[]> {
     // Aggregate PR data
     prsResponse.data.items.forEach((pr) => {
       const date = new Date(pr.created_at);
-      const monthKey = monthNames[date.getMonth()];
+      const monthKey = monthNames[date.getUTCMonth()];
 
       if (monthlyData[monthKey] !== undefined) {
         monthlyData[monthKey].prs += 1;
@@ -213,7 +243,7 @@ export async function getMonthlyActivity(): Promise<MonthlyActivity[]> {
 
     // Aggregate review data
     reviews.forEach((review) => {
-      const monthKey = monthNames[review.createdAt.getMonth()];
+      const monthKey = monthNames[review.createdAt.getUTCMonth()];
 
       if (monthlyData[monthKey] !== undefined) {
         monthlyData[monthKey].review += 1;
@@ -222,7 +252,7 @@ export async function getMonthlyActivity(): Promise<MonthlyActivity[]> {
 
     // Convert to array format for chart
     // Chart libraries expect: [{ name, commit, prs, review }, ...]
-    return Object.keys(monthlyData).map((name) => ({
+    return last6Months.map((name) => ({
       name,
       ...monthlyData[name],
     }));

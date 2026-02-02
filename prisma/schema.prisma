@@ -28,7 +28,7 @@ model User {
 model Session {
   id        String   @id
   expiresAt DateTime
-  token     String
+  token     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   ipAddress String?
@@ -36,7 +36,6 @@ model Session {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
   @@index([userId])
   @@map("session")
 }
@@ -47,9 +46,9 @@ model Account {
   providerId            String
   userId                String
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
   accessTokenExpiresAt  DateTime?
   refreshTokenExpiresAt DateTime?
   scope                 String?
@@ -73,22 +72,15 @@ model Verification {
   @@map("verification")
 }
 
-/**
- * Repository - Stores GitHub repositories user wants to track
- * WHY WE NEED THIS:
- * - Track which repos user has enabled AI review for
- * - Store repo metadata (name, language, etc.)
- * - Link PRs to their repositories
- * RELATIONSHIPS:
- * - Belongs to one User
- * - Has many PullRequests
- */
+// ============================================
+// GITHUB & REVIEW MODELS
+// ============================================
 
 model Repository {
   id          String  @id @default(cuid())
-  githubId    Int     @unique //github repository ID
+  githubId    BigInt  @unique //github repository ID
   name        String // repo name
-  fullName    String // full repo name (e.g., owner/repo)
+  fullName    String  @unique
   owner       String // github username
   description String? @db.Text
   language    String?
@@ -106,27 +98,13 @@ model Repository {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
-  @@index([githubId])
-  @@index([fullName])
+  @@index([owner])
   @@map("repository")
 }
 
-/**
- * PullRequest - Stores PR data from GitHub
- * WHY WE NEED THIS:
- * - Track which PRs have been reviewed
- * - Store PR metadata and state
- * - Link reviews to specific PRs
- * RELATIONSHIPS:
- * - Belongs to one Repository
- * - Has many Reviews (can be reviewed multiple times if updated)
- */
-
 model PullRequest {
-  id String @id @default(cuid())
-
-  // GitHub data
-  githubId    Int     @unique // GitHub's PR ID (unique globally)
+  id          String  @id @default(cuid())
+  githubId    BigInt  @unique // GitHub's PR ID (unique globally)
   number      Int // PR number in repo (e.g., #42)
   title       String // PR title
   description String? @db.Text // PR description/body
@@ -151,23 +129,11 @@ model PullRequest {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([repositoryId]) 
-  @@index([githubId]) 
-  @@index([state]) 
+  @@index([repositoryId, number])
+  @@index([author])
+  @@index([state])
   @@map("pull_request")
 }
-
-/**
- * Review - AI-generated code review
- * WHY WE NEED THIS:
- * - Store the AI's overall analysis
- * - Track review status (pending, completed, failed)
- * - Link individual comments to reviews
- * RELATIONSHIPS:
- * - Belongs to one PullRequest
- * - Belongs to one User (who triggered it)
- * - Has many Comments (line-by-line feedback)
- */
 
 model Review {
   id String @id @default(cuid())
@@ -181,7 +147,7 @@ model Review {
   issuesFound  Int  @default(0) // Count of issues
 
   // AI metadata
-  aiModel    String? 
+  aiModel    String?
   tokensUsed Int? // Track API usage
 
   // Relationships
@@ -196,22 +162,13 @@ model Review {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([pullRequestId]) 
-  @@index([userId]) 
-  @@index([status]) 
+  @@index([pullRequestId])
+  @@index([userId])
+  @@index([status])
   @@index([createdAt])
   @@map("review")
 }
 
-/**
- * Comment - Individual code review comment
- * WHY WE NEED THIS:
- * - Store line-by-line feedback from AI
- * - Categorize issues (bug, security, style, etc.)
- * - Track if issues were resolved
- * RELATIONSHIPS:
- * - Belongs to one Review
- */
 model Comment {
   id String @id @default(cuid())
 
@@ -233,7 +190,7 @@ model Comment {
   resolvedAt DateTime? // When it was marked resolved
 
   // GitHub integration
-  githubCommentId Int? @unique // If posted to GitHub, store comment ID
+  githubCommentId BigInt? @unique // If posted to GitHub, store comment ID
 
   // Relationships
   reviewId String
@@ -242,9 +199,9 @@ model Comment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([reviewId]) 
-  @@index([severity]) 
-  @@index([category]) 
-  @@index([isResolved]) 
+  @@index([reviewId])
+  @@index([severity])
+  @@index([category])
+  @@index([isResolved])
   @@map("comment")
 }

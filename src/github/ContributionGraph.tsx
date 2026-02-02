@@ -28,12 +28,7 @@ interface ContributionGraphProps {
   avatarUrl?: string;
 }
 
-interface ActivityDay {
-  date: string;
-  count: number;
-  level: 0 | 1 | 2 | 3 | 4;
-  isFuture: boolean;
-}
+
 
 /**
  * GitHub-style contribution graph 
@@ -44,8 +39,8 @@ export const ContributionGraph = ({ avatarUrl, username }: ContributionGraphProp
 
   // Fetch contribution data from GitHub
   const { data: calendar, isLoading, error } = useQuery({
-    queryKey: ["github-contributions"],
-    queryFn: async () => await fetchContributions(),
+    queryKey: ["github-contributions",selectedYear],
+    queryFn: async () => await fetchContributions(selectedYear),
     staleTime: 1000 * 60 * 10,
     retry: 2,
   });

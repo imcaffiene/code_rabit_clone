@@ -58,7 +58,7 @@ export const getGithubToken = cache(async () => {
   });
 
   if (!session) {
-    throw new GithubApiError("No session found. Please log in.");
+    throw new GithubAuthError("No session found. Please log in.");
   }
 
   const account = await prisma.account.findFirst({
@@ -163,17 +163,52 @@ export async function fetchUserContributions(
 
 /**
  * Gets contribution calendar for the currently authenticated user
- *
- * @returns Contribution calendar or null
+ * @param year - The year to fetch (e.g., 2024, 2025)
  */
-
-export async function getCurrentUserContributions() {
+export async function getCurrentUserContributions(year?: number) {
   try {
     const octokit = await getOctokitInstanse();
     const { data: user } = await octokit.rest.users.getAuthenticated();
-    const token = await getGithubToken();
 
-    return await fetchUserContributions(token, user.login);
+    // Calculate date range for the selected year
+    const targetYear = year || new Date().getFullYear();
+    const fromDate = `${targetYear}-01-01T00:00:00Z`;
+    const toDate = `${targetYear}-12-31T23:59:59Z`;
+
+    // Query with date range
+    const query = `
+      query($username: String!, $from: DateTime!, $to: DateTime!) {
+        user(login: $username) {
+          contributionsCollection(from: $from, to: $to) {
+            contributionCalendar {
+              totalContributions
+              weeks {
+                contributionDays {
+                  contributionCount
+                  date
+                  color
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const response: ContributionResponse = await octokit.graphql(query, {
+      username: user.login,
+      from: fromDate, // Pass start date
+      to: toDate, // Pass end date
+    });
+
+    const calendar = response.user.contributionsCollection.contributionCalendar;
+
+    if (!calendar) {
+      console.error("Invalid response structure from GitHub");
+      return null;
+    }
+
+    return calendar;
   } catch (error) {
     console.error("Error in getCurrentUserContributions:", error);
     return null;

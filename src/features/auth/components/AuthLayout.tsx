@@ -46,7 +46,9 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
             <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
               <Code2 className="w-7 h-7 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold text-foreground">CodeRabbit</span>
+            <span className="text-2xl font-bold text-foreground">
+              CodeGuardian
+            </span>
           </div>
 
           {/* Main Headline */}

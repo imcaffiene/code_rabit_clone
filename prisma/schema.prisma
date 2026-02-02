@@ -8,15 +8,19 @@ datasource db {
 }
 
 model User {
-  id            String    @id
-  email         String    @unique
+  id            String   @id
+  email         String   @unique
   name          String?
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean  @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sessions Session[]
+  accounts Account[]
+
+  repositories Repository[] // User's synced GitHub repos
+  reviews      Review[] // AI reviews created for this user
 
   @@map("user")
 }
@@ -67,4 +71,180 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+/**
+ * Repository - Stores GitHub repositories user wants to track
+ * WHY WE NEED THIS:
+ * - Track which repos user has enabled AI review for
+ * - Store repo metadata (name, language, etc.)
+ * - Link PRs to their repositories
+ * RELATIONSHIPS:
+ * - Belongs to one User
+ * - Has many PullRequests
+ */
+
+model Repository {
+  id          String  @id @default(cuid())
+  githubId    Int     @unique //github repository ID
+  name        String // repo name
+  fullName    String // full repo name (e.g., owner/repo)
+  owner       String // github username
+  description String? @db.Text
+  language    String?
+  isPrivate   Boolean @default(false)
+
+  // Settings
+  isActive Boolean @default(true) // is AI review enabled for this repo
+
+  //relations
+  userId       String // Who owns this in our system
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pullRequests PullRequest[] // All PRs in this repo
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([githubId])
+  @@index([fullName])
+  @@map("repository")
+}
+
+/**
+ * PullRequest - Stores PR data from GitHub
+ * WHY WE NEED THIS:
+ * - Track which PRs have been reviewed
+ * - Store PR metadata and state
+ * - Link reviews to specific PRs
+ * RELATIONSHIPS:
+ * - Belongs to one Repository
+ * - Has many Reviews (can be reviewed multiple times if updated)
+ */
+
+model PullRequest {
+  id String @id @default(cuid())
+
+  // GitHub data
+  githubId    Int     @unique // GitHub's PR ID (unique globally)
+  number      Int // PR number in repo (e.g., #42)
+  title       String // PR title
+  description String? @db.Text // PR description/body
+  state       String // "open", "closed", "merged"
+
+  // PR details
+  author     String // GitHub username of PR author
+  baseBranch String // Target branch (usually "main")
+  headBranch String // Source branch (e.g., "feature/new-thing")
+  headSha    String // Git commit SHA (used to fetch diff)
+
+  // Metadata
+  additions    Int @default(0) // Lines added
+  deletions    Int @default(0) // Lines deleted
+  changedFiles Int @default(0) // Number of files changed
+
+  // Relationships
+  repositoryId String
+  repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  reviews      Review[] // All AI reviews for this PR
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([repositoryId]) 
+  @@index([githubId]) 
+  @@index([state]) 
+  @@map("pull_request")
+}
+
+/**
+ * Review - AI-generated code review
+ * WHY WE NEED THIS:
+ * - Store the AI's overall analysis
+ * - Track review status (pending, completed, failed)
+ * - Link individual comments to reviews
+ * RELATIONSHIPS:
+ * - Belongs to one PullRequest
+ * - Belongs to one User (who triggered it)
+ * - Has many Comments (line-by-line feedback)
+ */
+
+model Review {
+  id String @id @default(cuid())
+
+  // Review content
+  summary String @db.Text // Overall summary from AI
+  status  String // "pending", "processing", "completed", "failed"
+
+  // Scoring (optional - can add later)
+  overallScore Int? // 0-100 quality score
+  issuesFound  Int  @default(0) // Count of issues
+
+  // AI metadata
+  aiModel    String? 
+  tokensUsed Int? // Track API usage
+
+  // Relationships
+  pullRequestId String
+  pullRequest   PullRequest @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
+
+  userId String // User who owns this review
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  comments Comment[] // Individual line comments
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pullRequestId]) 
+  @@index([userId]) 
+  @@index([status]) 
+  @@index([createdAt])
+  @@map("review")
+}
+
+/**
+ * Comment - Individual code review comment
+ * WHY WE NEED THIS:
+ * - Store line-by-line feedback from AI
+ * - Categorize issues (bug, security, style, etc.)
+ * - Track if issues were resolved
+ * RELATIONSHIPS:
+ * - Belongs to one Review
+ */
+model Comment {
+  id String @id @default(cuid())
+
+  // Location in code
+  filePath   String // Path to file (e.g., "src/app/page.tsx")
+  lineNumber Int // Line number in file
+  lineEnd    Int? // For multi-line comments
+
+  // Comment content
+  content    String  @db.Text // The AI's comment/feedback
+  suggestion String? @db.Text // Suggested fix (code snippet)
+
+  // Classification
+  severity String // "info", "warning", "error", "critical"
+  category String // "bug", "security", "performance", "style", "best-practice"
+
+  // Status
+  isResolved Boolean   @default(false) // Track if developer fixed it
+  resolvedAt DateTime? // When it was marked resolved
+
+  // GitHub integration
+  githubCommentId Int? @unique // If posted to GitHub, store comment ID
+
+  // Relationships
+  reviewId String
+  review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([reviewId]) 
+  @@index([severity]) 
+  @@index([category]) 
+  @@index([isResolved]) 
+  @@map("comment")
 }

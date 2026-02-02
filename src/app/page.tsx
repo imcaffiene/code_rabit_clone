@@ -48,7 +48,8 @@ export default function Home() {
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
               <Code2 className="w-6 h-6 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold text-foreground">CodeRabbit</span>
+            <span className="text-xl font-bold text-foreground">CodeGuardian
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <ThemeSwitcher />

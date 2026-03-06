@@ -15,11 +15,11 @@ export function DashboardHeader() {
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
       </div>
-      
+
       <div className="flex items-center gap-2">
         <ThemeSwitcher />
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           size="sm"
           className="gap-2"
           onClick={logout}

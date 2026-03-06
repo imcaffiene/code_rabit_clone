@@ -12,7 +12,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSubButton,
   useSidebar
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
@@ -33,14 +32,14 @@ import { useEffect, useState } from "react";
 
 const navItem = [
   { title: "Overview", url: "/dashboard", icon: TableOfContentsIcon },
-  { title: "Repositories", url: "/dashboard/repositories", icon: GitBranchIcon },
-  { title: "Review", url: "/dashboard/review", icon: UserStarIcon },
-  { title: "Subscription", url: "/dashboard/subscription", icon: CrownIcon },
-  { title: "Settings", url: "/dashboard/settings", icon: Settings2Icon },
+  { title: "Repositories", url: "/repositories", icon: GitBranchIcon },
+  { title: "Review", url: "/review", icon: UserStarIcon },
+  { title: "Subscription", url: "/subscription", icon: CrownIcon },
+  { title: "Settings", url: "/settings", icon: Settings2Icon },
 ];
 
 export const AppSidebar = () => {
-  const { theme, setTheme } = useTheme();
+  // const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const pathName = usePathname();
 

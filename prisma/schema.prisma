@@ -85,6 +85,7 @@ model Repository {
   description String? @db.Text
   language    String?
   isPrivate   Boolean @default(false)
+  // url         String
 
   // Settings
   isActive Boolean @default(true) // is AI review enabled for this repo

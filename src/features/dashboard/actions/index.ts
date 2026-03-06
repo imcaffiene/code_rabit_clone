@@ -1,6 +1,7 @@
 "use server";
 
-import { getCurrentUserContributions, GithubAuthError } from "@/github/Github";
+import { GithubAuthError } from "@/github/errors";
+import { getCurrentUserContributions } from "@/github/Github";
 import { getOctokitInstanse } from "@/github/helper";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
@@ -194,7 +195,7 @@ export async function getMonthlyActivity(): Promise<MonthlyActivity[]> {
         const [year, month, dayOfMonth] = day.date.split("-").map(Number);
         const dateUTC = new Date(Date.UTC(year, month - 1, dayOfMonth));
 
-        // ✅ Only count if date is within 6-month window
+        // Only count if date is within 6-month window
         if (dateUTC >= sixMonthsAgoUTC) {
           const monthKey = monthNames[dateUTC.getUTCMonth()]; //Use getUTCMonth()
 
